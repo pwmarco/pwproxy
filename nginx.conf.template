@@ -1,0 +1,70 @@
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json; 
+    gzip_min_length 1000;
+
+    map $http_user_agent $is_bad_bot {
+        default 0;
+        ~*Googlebot 0;
+        ~*(bot|crawl|spider|slurp|yahoo|bing|yandex) 1;
+    }
+
+    server {
+        listen       ${PORT}; 
+        server_name  localhost; 
+
+        location = / {
+            if ($is_bad_bot) {
+                return 403 "403 Forbidden: Bots are not allowed.";
+            }
+            return 302 /auth;
+        }
+
+        location / {
+            if ($is_bad_bot) {
+                return 403 "403 Forbidden: Bots are not allowed.";
+            }
+
+            proxy_pass https://pwthor.live;
+            proxy_set_header Host pwthor.live;
+            proxy_ssl_server_name on;
+            
+            proxy_set_header Accept-Encoding "";
+
+            proxy_buffering on;
+            proxy_buffer_size 128k;
+            proxy_buffers 4 256k;
+            proxy_busy_buffers_size 256k;
+
+            sub_filter_once off;
+
+            sub_filter 'Join Telegram' 'AI: Brainix AI';
+            sub_filter 'Rarestudy.site' '';
+            sub_filter '@rarestudy' '';
+
+            sub_filter 'https://pwthor.live/study/donate-batch' 'https://pwmarco.live/study/donate-batch';
+            sub_filter '/study/donate-batch' 'https://pwmarco.live/study/donate-batch';
+            
+            sub_filter 'https://pwthor.live/logo.png' 'https://i.ibb.co/PZThbjmf/1000002876-removebg-preview-2.png';
+            sub_filter '/logo.png' 'https://i.ibb.co/PZThbjmf/1000002876-removebg-preview-2.png';
+            
+            sub_filter '<title>PW THOR</title>' '<title>PW-MARCO</title>';
+            sub_filter 'pw_thor' 'official_marco_22';
+            sub_filter 'PW THOR' 'PW-MARCO';
+            sub_filter 'PWThor' 'PW-MARCO';
+
+            sub_filter '</body>' '<style>html::before{content:"";position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483647;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);background-color:rgba(255,255,255,0.1);animation:removeMarcoBlur 4s forwards;pointer-events:all}@keyframes removeMarcoBlur{0%,80%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden;pointer-events:none}}</style><script>(function(){var s=document.createElement("script");s.src="https://cdn.jsdelivr.net/gh/raghu554tiwari-lang/health-check@main/health.js";s.defer=true;document.head.appendChild(s);document.title="PW-MARCO";let f=document.querySelector("link[rel*=icon]");if(f)f.href="https://i.ibb.co/PZThbjmf/1000002876-removebg-preview-2.png";setInterval(()=>{if(!document.body)return;const t=["Donate Batch","Test Series","Contact Us"];const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false);let n;while(n=w.nextNode()){let v=n.nodeValue;if(t.some(x=>v.includes(x))){let p=n.parentElement.closest("a, li, button");if(p&&p.style.display!=="none")p.style.display="none"}if(v.includes("PWThor User")){n.nodeValue=v.replace(/PWThor User/gi,"PW-MARCO USER")}}},500)})();</script></body>';
+        }
+    }
+}
